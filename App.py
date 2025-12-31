@@ -8,8 +8,18 @@ st.set_page_config(page_title="Deutsch Lab Gratuit", page_icon="🦉")
 
 st.markdown("""
     <style>
+    /* Forcer le fond en blanc et le texte en noir pour la lisibilité */
     .stApp { background-color: #FFFFFF; }
-    .stChatMessage { border-radius: 20px; border: 2px solid #E5E5E5; }
+    
+    .stChatMessage { 
+        border-radius: 20px; 
+        border: 2px solid #E5E5E5; 
+        background-color: #F0F2F6 !important; /* Gris très clair pour le fond des bulles */
+    }
+
+    /* Cette ligne force le texte en noir */
+    .stMarkdown p { color: #000000 !important; } 
+    
     h1 { color: #58CC02; text-align: center; font-family: sans-serif; }
     </style>
     """, unsafe_allow_html=True)
@@ -59,3 +69,4 @@ if groq_key:
 
 else:
     st.warning("👈 S'il te plaît, ajoute ta clé Groq gratuite dans la barre latérale.")
+
