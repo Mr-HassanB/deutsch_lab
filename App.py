@@ -3,53 +3,60 @@ from groq import Groq
 from streamlit_mic_recorder import mic_recorder
 import io
 
-# --- STYLE DUOLINGO ---
-st.set_page_config(page_title="Deutsch Lab Gratuit", page_icon="🦉")
+# --- 1. CONFIGURATION VISUELLE (Correction texte noir) ---
+st.set_page_config(page_title="Deutsch Lab Coach", page_icon="🦉")
 
 st.markdown("""
     <style>
-    /* Forcer le fond en blanc et le texte en noir pour la lisibilité */
+    /* Fond de page blanc */
     .stApp { background-color: #FFFFFF; }
     
+    /* Bulles de chat : fond gris clair et texte noir forcé */
     .stChatMessage { 
         border-radius: 20px; 
         border: 2px solid #E5E5E5; 
-        background-color: #F0F2F6 !important; /* Gris très clair pour le fond des bulles */
+        background-color: #F8F9FA !important;
     }
-
-    /* Cette ligne force le texte en noir */
-    .stMarkdown p { color: #000000 !important; } 
     
-    h1 { color: #58CC02; text-align: center; font-family: sans-serif; }
+    /* Forcer la couleur du texte en noir pour être lisible sur mobile */
+    .stMarkdown p, .stMarkdown li, span { 
+        color: #111111 !important; 
+    }
+    
+    /* Titre en vert Duolingo */
+    h1 { color: #58CC02; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- CONFIGURATION GROQ ---
+# --- 2. BARRE LATÉRALE ---
 with st.sidebar:
     st.markdown('<img src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix" style="width:100px; display:block; margin:auto;">', unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center;'>Felix (Version Groq)</h3>", unsafe_allow_html=True)
-    groq_key = st.text_input("Entre ta clé API GROQ (Gratuite)", type="password")
-    st.info("Obtiens ta clé sur console.groq.com")
+    st.markdown("<h3 style='text-align: center; color: black;'>Coach Felix</h3>", unsafe_allow_html=True)
+    st.divider()
+    # Zone pour la clé Groq (Gratuite)
+    api_key = st.text_input("Clé API Groq (gsk_...)", type="password")
+    st.markdown("[Obtenir une clé gratuite ici](https://console.groq.com/keys)")
 
+# --- 3. LOGIQUE DE L'IA ---
 st.title("🦉 Mon Deutsch Lab")
 
-if groq_key:
-    client = Groq(api_key=groq_key)
+if api_key:
+    client = Groq(api_key=api_key)
 
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "system", "content": "Tu es Felix, un prof d'allemand. Réponds en allemand. Si l'utilisateur parle français, explique en français à la fin."}
+            {"role": "system", "content": "Tu es Felix, un prof d'allemand sympa. Réponds en allemand, puis donne une courte traduction ou explication en français si la phrase est complexe."}
         ]
 
-    # Affichage des messages
+    # Affichage de la conversation
     for message in st.session_state.messages:
         if message["role"] != "system":
             avatar = "👤" if message["role"] == "user" else "https://api.dicebear.com/7.x/bottts/svg?seed=Felix"
             with st.chat_message(message["role"], avatar=avatar):
                 st.markdown(message["content"])
 
-    # Entrée utilisateur
-    user_input = st.chat_input("Écris ton message ici...")
+    # Zone d'écriture
+    user_input = st.chat_input("Réponds à Felix ici...")
 
     if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
@@ -57,16 +64,17 @@ if groq_key:
             st.markdown(user_input)
 
         with st.chat_message("assistant", avatar="https://api.dicebear.com/7.x/bottts/svg?seed=Felix"):
-            with st.spinner("Felix écrit..."):
-                chat_completion = client.chat.completions.create(
-                    messages=st.session_state.messages,
-                    model="llama-3.3-70b-versatile", # Un des meilleurs modèles gratuits
-                )
-                response = chat_completion.choices[0].message.content
-                st.markdown(response)
-        
-        st.session_state.messages.append({"role": "assistant", "content": response})
+            with st.spinner("Felix réfléchit..."):
+                try:
+                    chat_completion = client.chat.completions.create(
+                        messages=st.session_state.messages,
+                        model="llama-3.3-70b-versatile",
+                    )
+                    response = chat_completion.choices[0].message.content
+                    st.markdown(response)
+                    st.session_state.messages.append({"role": "assistant", "content": response})
+                except Exception as e:
+                    st.error(f"Erreur : {e}")
 
 else:
-    st.warning("👈 S'il te plaît, ajoute ta clé Groq gratuite dans la barre latérale.")
-
+    st.info("👋 Hallo! Pour commencer, entre ta clé API Groq gratuite dans la barre latérale à gauche.")
